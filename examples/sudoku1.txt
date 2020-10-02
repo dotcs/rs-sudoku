@@ -1,0 +1,13 @@
+# Source: https://dingo.sbs.arizona.edu/~sandiway/sudoku/examples.html
+# Arizona Daily Wildcat: Tuesday, Jan 17th 2006
+xxx|26x|7x1
+68x|x7x|x9x
+19x|xx4|5xx
+--
+82x|1xx|x4x
+xx4|6x2|9xx
+x5x|xx3|x28
+--
+xx9|3xx|x74
+x4x|x5x|x36
+7x3|x18|xxx

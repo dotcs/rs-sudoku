@@ -1,0 +1,13 @@
+# Source: https://dingo.sbs.arizona.edu/~sandiway/sudoku/examples.html
+# Arizona Daily Wildcat: Tuesday, Jan 17th 2006
+435|269|781
+682|571|493
+197|834|562
+--
+826|195|347
+374|682|915
+951|743|628
+--
+519|326|874
+248|957|136
+763|418|259

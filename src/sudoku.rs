@@ -199,6 +199,12 @@ impl Sudoku {
         println!("Solved. Needed {} tries.", tries);
     }
 
+    pub fn reset(&mut self) {
+        for (r, c) in self.mutable_fields.iter() {
+            self.grid[*r as usize][*c as usize] = 0;
+        }
+    }
+
     pub fn print_grid(&self) {
         for (i, row) in (&self.grid).iter().enumerate() {
             if i > 0 && i % 3 == 0 {
@@ -359,5 +365,19 @@ mod tests {
         s.read("examples/sudoku1.txt");
         assert_eq!(s.get_field_guesses(0, 0), vec![3, 4, 5]);
         assert_eq!(s.get_field_guesses(8, 8), vec![2, 5, 9]);
+    }
+    #[test]
+    fn it_should_reset_values() {
+        let mut s = Sudoku::new();
+        s.read("examples/sudoku1.txt");
+
+        // Sanity check; (0,0) must be mutable field
+        assert_eq!(s.get_mutable_fields()[0], (0, 0));
+
+        s.grid[0][0] = 5; // change value so that there is something to reset
+        assert_eq!(s.grid[0][0], 5);
+
+        s.reset();
+        assert_eq!(s.grid[0][0], 0);
     }
 }

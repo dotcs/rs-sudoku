@@ -1,11 +1,10 @@
-use log::{Level, Metadata, Record};
-use log::{LevelFilter, SetLoggerError};
+use log::{LevelFilter, Metadata, Record, SetLoggerError};
 
 struct SimpleLogger;
 
 impl log::Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Info
+    fn enabled(&self, _: &Metadata) -> bool {
+        true
     }
 
     fn log(&self, record: &Record) {

@@ -29,12 +29,13 @@ fn main() {
         )
         .get_matches();
 
+    // Configure logger as early as possible.
     let log_level: LevelFilter = match matches.occurrences_of("verbosity") {
         0 => LevelFilter::Warn,
         1 => LevelFilter::Info,
         2 | _ => LevelFilter::Trace,
     };
-    logger::init(log_level).unwrap();
+    let _ = logger::init(log_level);
 
     info!("Using input file: {}", matches.value_of("INPUT").unwrap());
 

@@ -1,7 +1,7 @@
 # Simple Sudoku Solver written in Rust
 
 This project is a toy project that I have written to get familiar with the Rust language.
-It contains a simple algorithm to solve Sudokus.
+It contains a simple algorithm to solve sudokus.
 
 ## Getting started
 
@@ -11,8 +11,9 @@ Use the version that matches your operating system.
 Use the `--help` flag to get familiar with all options.
 ```console
 $ rs-sudoku --help
-Rust Sudoku Solver 0.0.1
+Rust Sudoku Solver 0.1.0
 dotcs <git@dotcs.me>
+Simple sudoku solver written in Rust
 
 USAGE:
     rs-sudoku [FLAGS] <INPUT>
@@ -21,9 +22,10 @@ FLAGS:
     -h, --help             Prints help information
         --show-unsolved    Shows the unsolved sudoku next to the solution
     -V, --version          Prints version information
+    -v, --verbose          Sets the level of verbosity, can be used multiple times to increase verbosity
 
 ARGS:
-    <INPUT>    Sets the file to read the Sudoku from
+    <INPUT>    Sets the file to read the sudoku from
 ```
 
 In the [`examples`](./examples) folder of this respository a few Sudokus are located that can be use to quickly try out this Rust implementation.
@@ -34,8 +36,6 @@ To solve a sudoku run
 
 ```console
 $ rs-sudoku /path/to/sudoku.txt
-Using input file: /path/to/sudoku.txt
-Solved. Needed 63 tries.
 435|269|781
 682|571|493
 197|834|562
@@ -50,11 +50,12 @@ Solved. Needed 63 tries.
 ```
 
 To compare this with the input use the `--show-unsolved` flag.
+Add more output with the `-v` / `--verbose` flag.
 
-```
-$ rs-sudoku --show-unsolved /path/to/sudoku.txt
-Using input file: /path/to/sudoku.txt
-Solved. Needed 63 tries.
+```console
+$ rs-sudoku -v --show-unsolved /path/to/sudoku.txt
+INFO: Using input file: /path/to/sudoku.txt
+INFO: Solved. Needed 63 tries.
 xxx|26x|7x1 -> 435|269|781
 68x|x7x|x9x -> 682|571|493
 19x|xx4|5xx -> 197|834|562
@@ -76,8 +77,6 @@ Then clone this repository and run
 
 ```console
 $ cargo run -- examples/sudoku1.txt
-Using input file: examples/sudoku1.txt
-Solved. Needed 63 tries.
 435|269|781
 682|571|493
 197|834|562

@@ -3,6 +3,12 @@ name = "rs-sudoku"
 version = "0.2.0"
 authors = ["dotcs <git@dotcs.me>"]
 edition = "2018"
+categories = ["command-line-utilities"]
+keywords = ["cli", "sudoku", "sudoku-solver"]
+license = "GPL-3.0-or-later"
+license-file = "LICENSE"
+readme = "Readme.md"
+repository = "https://github.com/dotcs/rs-sudoku"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

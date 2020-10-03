@@ -63,6 +63,7 @@ impl Sudoku {
         self.grid.get(row_index as usize).unwrap().clone()
     }
 
+    #[allow(dead_code)]
     fn is_valid_row(&self, row_index: u8) -> bool {
         let row = self.get_row(row_index);
         Sudoku::has_only_unique_digits(row)
@@ -76,6 +77,7 @@ impl Sudoku {
             .collect()
     }
 
+    #[allow(dead_code)]
     fn is_valid_col(&self, col_index: u8) -> bool {
         let column = self.get_col(col_index);
         Sudoku::has_only_unique_digits(column)
@@ -107,6 +109,7 @@ impl Sudoku {
         nonzero_values.len() == unique_values.len()
     }
 
+    #[allow(dead_code)]
     fn is_valid_parcel(&self, parcel_index: u8) -> bool {
         let parcel = self.get_parcel(parcel_index);
         Sudoku::has_only_unique_digits(parcel.into_iter().flatten().collect::<Vec<u8>>())
@@ -118,6 +121,7 @@ impl Sudoku {
         x * 3 + y
     }
 
+    #[allow(dead_code)]
     fn is_valid_field(&self, row_index: u8, col_index: u8) -> bool {
         let parcel_index = Sudoku::get_parcel_index(row_index, col_index);
         self.is_valid_row(row_index)
@@ -208,6 +212,7 @@ impl Sudoku {
         println!("Solved. Needed {} tries.", tries);
     }
 
+    #[allow(dead_code)]
     pub fn reset(&mut self) {
         for (r, c) in self.mutable_fields.iter() {
             self.grid[*r as usize][*c as usize] = 0;
@@ -247,6 +252,7 @@ impl Sudoku {
         out
     }
 
+    #[allow(dead_code)]
     pub fn print(grid: &Vec<Vec<u8>>) {
         println!("{}", Sudoku::fmt(grid));
     }

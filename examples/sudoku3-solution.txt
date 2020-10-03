@@ -1,0 +1,13 @@
+# Source: https://dingo.sbs.arizona.edu/~sandiway/sudoku/examples.html
+# Challenge 1 from Sudoku Solver by Logic
+126|437|958
+895|621|473
+374|985|126
+-----------
+457|193|862
+983|246|517
+612|578|394
+-----------
+269|314|785
+548|769|231
+731|852|649

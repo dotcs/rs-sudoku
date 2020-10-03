@@ -253,8 +253,17 @@ impl Sudoku {
     }
 
     #[allow(dead_code)]
-    pub fn print(grid: &Vec<Vec<u8>>) {
-        println!("{}", Sudoku::fmt(grid));
+    pub fn print(&self, show_unsolved: bool) {
+        if !show_unsolved {
+            println!("{}", Sudoku::fmt(&self.grid));
+        } else {
+            let unresolved = Sudoku::fmt(&self.get_unsolved());
+            let solved = Sudoku::fmt(&self.grid);
+            let solved_iter: Vec<&str> = solved.split("\n").collect();
+            for (i, line) in unresolved.split("\n").enumerate() {
+                println!("{} -> {}", line, solved_iter.get(i).unwrap());
+            }
+        }
     }
 }
 

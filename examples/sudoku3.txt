@@ -1,0 +1,13 @@
+# Source: https://dingo.sbs.arizona.edu/~sandiway/sudoku/examples.html
+# Challenge 1 from Sudoku Solver by Logic
+x2x|xxx|xxx
+xxx|6xx|xx3
+x74|x8x|xxx
+-----------
+xxx|xx3|xx2
+x8x|x4x|x1x
+6xx|5xx|xxx
+-----------
+xxx|x1x|78x
+5xx|xx9|xxx
+xxx|xxx|x4x

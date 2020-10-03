@@ -1,0 +1,16 @@
+---
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build_and_test:
+    name: rs-sudoku
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo test
+      - run: cargo build --release --all-features

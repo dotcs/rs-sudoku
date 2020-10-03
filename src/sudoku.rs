@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use log::info;
 use std::collections::HashSet;
 use std::fmt;
 use std::iter;
@@ -209,7 +210,7 @@ impl Sudoku {
             tries += 1;
         }
 
-        println!("Solved. Needed {} tries.", tries);
+        info!("Solved. Needed {} tries.", tries);
     }
 
     #[allow(dead_code)]

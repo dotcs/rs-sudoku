@@ -1,5 +1,7 @@
 use clap::{App, Arg};
+use log::{info, LevelFilter};
 
+mod logger;
 mod sudoku;
 
 fn main() {
@@ -19,9 +21,22 @@ fn main() {
                 .required(false)
                 .help("Shows the unsolved sudoku next to the solution"),
         )
+        .arg(
+            Arg::with_name("verbosity")
+                .short("v")
+                .multiple(true)
+                .help("Sets the level of verbosity"),
+        )
         .get_matches();
 
-    println!("Using input file: {}", matches.value_of("INPUT").unwrap());
+    let log_level: LevelFilter = match matches.occurrences_of("verbosity") {
+        0 => LevelFilter::Warn,
+        1 => LevelFilter::Info,
+        2 | _ => LevelFilter::Trace,
+    };
+    logger::init(log_level).unwrap();
+
+    info!("Using input file: {}", matches.value_of("INPUT").unwrap());
 
     let mut s = sudoku::Sudoku::new();
     s.read(matches.value_of("INPUT").unwrap());

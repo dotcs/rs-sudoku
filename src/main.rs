@@ -6,7 +6,7 @@ mod sudoku;
 
 fn main() {
     let matches = App::new("Rust Sudoku Solver")
-        .version("0.1.0")
+        .version("0.2.0")
         .about("Simple sudoku solver written in Rust")
         .author("dotcs <git@dotcs.me>")
         .arg(

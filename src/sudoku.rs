@@ -16,10 +16,11 @@ impl fmt::Display for Sudoku {
 }
 
 // Naming:
-// valid: means that no invalid is in a row or parcel
-// done: means that all (missing) values have been filled
-// field: a 1x1 field
-// parcel: a 3x3 field group
+// valid:  means that no duplicated values are in a row or parcel (with the
+//         exception of the value 0)
+// done:   means that all (missing) values have been filled
+// field:  a 1x1 field in the grid
+// parcel: a 3x3 field group (numbered 0 - 8, row major)
 
 impl Sudoku {
     pub fn new() -> Sudoku {

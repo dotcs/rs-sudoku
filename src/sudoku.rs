@@ -1,10 +1,18 @@
 use itertools::Itertools;
 use std::collections::HashSet;
+use std::fmt;
+use std::iter;
 
 #[derive(Debug)]
 pub struct Sudoku {
-    grid: Vec<Vec<u8>>,
+    pub grid: Vec<Vec<u8>>,
     mutable_fields: Vec<(u8, u8)>,
+}
+
+impl fmt::Display for Sudoku {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Sudoku::fmt(&self.grid))
+    }
 }
 
 // Naming:
@@ -205,19 +213,41 @@ impl Sudoku {
         }
     }
 
-    pub fn print_grid(&self) {
-        for (i, row) in (&self.grid).iter().enumerate() {
+    pub fn get_unsolved(&self) -> Vec<Vec<u8>> {
+        let mut grid_copy = self.grid.clone();
+        for (r, c) in self.mutable_fields.iter() {
+            grid_copy[*r as usize][*c as usize] = 0;
+        }
+        grid_copy
+    }
+
+    pub fn fmt(grid: &Vec<Vec<u8>>) -> String {
+        let mut out = String::new();
+        for (i, row) in (grid).iter().enumerate() {
             if i > 0 && i % 3 == 0 {
-                println!("--");
+                out += &iter::repeat("-").take(11).collect::<String>()[..];
+                out += "\n";
             }
             for (j, v) in row.iter().enumerate() {
                 if j > 0 && j % 3 == 0 {
-                    print!("|")
+                    out += "|";
                 }
-                print!("{}", v);
+                if v == &0 {
+                    out += "x";
+                } else {
+                    let val = format!("{}", v);
+                    out += &val[..];
+                }
             }
-            print!("\n")
+            if i < grid.len() - 1 {
+                out += "\n";
+            }
         }
+        out
+    }
+
+    pub fn print(grid: &Vec<Vec<u8>>) {
+        println!("{}", Sudoku::fmt(grid));
     }
 }
 

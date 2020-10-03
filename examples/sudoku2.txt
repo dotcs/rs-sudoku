@@ -3,11 +3,11 @@
 1xx|489|xx6
 73x|xxx|x4x
 xxx|xx1|295
---
+-----------
 xx7|12x|6xx
 5xx|7x3|xx8
 xx6|x95|7xx
---
+-----------
 914|6xx|xxx
 x2x|xxx|x37
 8xx|512|xx4

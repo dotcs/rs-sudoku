@@ -11,18 +11,22 @@ Use the version that matches your operating system.
 Use the `--help` flag to get familiar with all options.
 ```console
 $ rs-sudoku --help
-Rust Sudoku Solver 0.1.0
+Rust Sudoku Solver <VERSION>
 dotcs <git@dotcs.me>
 Simple sudoku solver written in Rust
 
 USAGE:
-    rs-sudoku [FLAGS] <INPUT>
+    rs-sudoku [FLAGS] [OPTIONS] <INPUT>
 
 FLAGS:
     -h, --help             Prints help information
         --show-unsolved    Shows the unsolved sudoku next to the solution
     -V, --version          Prints version information
     -v, --verbose          Sets the level of verbosity, can be used multiple times to increase verbosity
+
+OPTIONS:
+        --max-tries <max-tries>    Defines the maximum number of tries to iteratively solve the sudoku. [default:
+                                   100000]
 
 ARGS:
     <INPUT>    Sets the file to read the sudoku from

@@ -1,5 +1,6 @@
 use clap::{value_t_or_exit, App, Arg};
 use log::{debug, error, info, LevelFilter};
+use std::process;
 
 mod logger;
 mod sudoku;
@@ -63,10 +64,15 @@ fn main() {
         Ok(msg) => {
             info!("{}", msg);
             s.print(show_unresolved);
+            process::exit(0);
         }
-        Err(msg) => error!(
-            "{} Consider increasing this number with the --max-tries argument.",
-            msg
-        ),
+        Err(msg) => {
+            error!(
+                "{} Make sure that the sudoku is valid and consider increasing this \
+                number with the --max-tries argument.",
+                msg
+            );
+            process::exit(1);
+        }
     }
 }

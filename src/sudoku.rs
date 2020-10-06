@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use log::info;
 use std::collections::HashSet;
 use std::fmt;
 use std::iter;
@@ -196,8 +195,8 @@ impl Sudoku {
     /// Solves the sudoku by iteratively walking through all editable field with the
     /// [Backtracing](https://en.wikipedia.org/wiki/Sudoku_solving_algorithms#Backtracking)
     /// algorithm.
-    /// This method is guaranteed to find a solution.
-    pub fn solve(&mut self) {
+    /// This method is guaranteed to find a solution if the sudoku is valid.
+    pub fn solve(&mut self, max_tries: u32) -> Result<String, String> {
         let mut index = 0;
         let mut tries = 0;
 
@@ -216,9 +215,15 @@ impl Sudoku {
                 index += 1;
             }
             tries += 1;
+            if tries == max_tries {
+                return Err(format!(
+                    "Could not solve sudoko. Exeeded limit of {} tries.",
+                    max_tries
+                ));
+            }
         }
 
-        info!("Solved. Needed {} tries.", tries);
+        Ok(format!("Solved. Needed {} tries.", tries))
     }
 
     /// Resets the sudoku to its original values by setting all mutable fields to

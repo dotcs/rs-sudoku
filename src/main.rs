@@ -1,5 +1,5 @@
-use clap::{App, Arg};
-use log::{debug, info, LevelFilter};
+use clap::{value_t_or_exit, App, Arg};
+use log::{debug, error, info, LevelFilter};
 
 mod logger;
 mod sudoku;
@@ -23,6 +23,13 @@ fn main() {
                 .help("Shows the unsolved sudoku next to the solution"),
         )
         .arg(
+            Arg::with_name("max-tries")
+                .long("max-tries")
+                .required(false)
+                .default_value("100000")
+                .help("Defines the maximum number of tries to iteratively solve the sudoku."),
+        )
+        .arg(
             Arg::with_name("verbosity")
                 .short("v")
                 .long("verbose")
@@ -40,13 +47,26 @@ fn main() {
         2 | _ => LevelFilter::Trace,
     };
     let _ = logger::init(log_level);
+    debug!("Set logging level to: {}", log_level);
 
     let input_file = matches.value_of("INPUT").unwrap();
-    debug!("Set logging level to: {}", log_level);
+    let max_tries = value_t_or_exit!(matches.value_of("max-tries"), u32);
+    let show_unresolved = matches.is_present("show-unsolved");
+
     info!("Using input file: {}", input_file);
+    info!("Using maximum number of tries: {}", max_tries);
 
     let mut s = sudoku::Sudoku::new();
+
     s.read(input_file);
-    s.solve();
-    s.print(matches.is_present("show-unsolved"));
+    match s.solve(max_tries) {
+        Ok(msg) => {
+            info!("{}", msg);
+            s.print(show_unresolved);
+        }
+        Err(msg) => error!(
+            "{} Consider increasing this number with the --max-tries argument.",
+            msg
+        ),
+    }
 }

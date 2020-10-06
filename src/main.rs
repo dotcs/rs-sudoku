@@ -31,6 +31,13 @@ fn main() {
                 .help("Defines the maximum number of tries to iteratively solve the sudoku."),
         )
         .arg(
+            Arg::with_name("algorithm")
+                .long("algorithm")
+                .possible_values(&["backtracing", "montecarlo"])
+                .default_value("backtracing")
+                .help("Selects which algorithm will be used to solve the sudoku."),
+        )
+        .arg(
             Arg::with_name("verbosity")
                 .short("v")
                 .long("verbose")
@@ -59,8 +66,14 @@ fn main() {
 
     let mut s = sudoku::Sudoku::new();
 
+    let solver_method = match matches.value_of("algorithm") {
+        Some("backtracing") => sudoku::Method::Backtracing,
+        Some("montecarlo") => sudoku::Method::Montecarlo,
+        _ => sudoku::Method::Backtracing,
+    };
+
     s.read(input_file);
-    match s.solve(max_tries) {
+    match s.solve(solver_method, max_tries) {
         Ok(msg) => {
             info!("{}", msg);
             s.print(show_unresolved);

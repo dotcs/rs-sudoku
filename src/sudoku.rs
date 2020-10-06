@@ -3,6 +3,11 @@ use std::collections::HashSet;
 use std::fmt;
 use std::iter;
 
+pub enum Method {
+    Backtracing,
+    Montecarlo,
+}
+
 #[derive(Debug)]
 pub struct Sudoku {
     pub grid: Vec<Vec<u8>>,
@@ -192,11 +197,18 @@ impl Sudoku {
         guesses
     }
 
+    pub fn solve(&mut self, method: Method, max_tries: u32) -> Result<String, String> {
+        match method {
+            Method::Backtracing => self.solve_backtrace(max_tries),
+            Method::Montecarlo => self.solve_montecarlo(max_tries),
+        }
+    }
+
     /// Solves the sudoku by iteratively walking through all editable field with the
     /// [Backtracing](https://en.wikipedia.org/wiki/Sudoku_solving_algorithms#Backtracking)
     /// algorithm.
     /// This method is guaranteed to find a solution if the sudoku is valid.
-    pub fn solve(&mut self, max_tries: u32) -> Result<String, String> {
+    pub fn solve_backtrace(&mut self, max_tries: u32) -> Result<String, String> {
         let mut index = 0;
         let mut tries = 0;
 
@@ -224,6 +236,13 @@ impl Sudoku {
         }
 
         Ok(format!("Solved. Needed {} tries.", tries))
+    }
+
+    pub fn solve_montecarlo(&mut self, max_tries: u32) -> Result<String, String> {
+        let n = 3;
+        let max_energy = 3 * i32::pow(n, 4);
+
+        Err(String::from("This method is not implemented yet."))
     }
 
     /// Resets the sudoku to its original values by setting all mutable fields to

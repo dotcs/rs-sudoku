@@ -41,11 +41,12 @@ fn main() {
     };
     let _ = logger::init(log_level);
 
+    let input_file = matches.value_of("INPUT").unwrap();
     debug!("Set logging level to: {}", log_level);
-    info!("Using input file: {}", matches.value_of("INPUT").unwrap());
+    info!("Using input file: {}", input_file);
 
     let mut s = sudoku::Sudoku::new();
-    s.read(matches.value_of("INPUT").unwrap());
+    s.read(input_file);
     s.solve();
     s.print(matches.is_present("show-unsolved"));
 }

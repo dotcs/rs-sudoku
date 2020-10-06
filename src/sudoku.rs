@@ -24,6 +24,9 @@ impl fmt::Display for Sudoku {
 // parcel: a 3x3 field group (numbered 0 - 8, row major)
 
 impl Sudoku {
+    /// Creates a new sudoku instance.
+    /// Make sure to run the `read` method afterwards to read a sudoku from a
+    /// file.
     pub fn new() -> Sudoku {
         let grid = vec![vec![9]; 9];
         let mutable_fields = vec![];
@@ -33,6 +36,7 @@ impl Sudoku {
         }
     }
 
+    /// Reads a sudoku from a file.
     pub fn read(&mut self, file: &str) -> () {
         let content = std::fs::read_to_string(file).unwrap();
         let res: Vec<Vec<_>> = content
@@ -51,7 +55,7 @@ impl Sudoku {
         self.mutable_fields = self.get_mutable_fields();
     }
 
-    pub fn get(&self, row: u8, col: u8) -> u8 {
+    fn get(&self, row: u8, col: u8) -> u8 {
         *self
             .grid
             .get(row as usize)
@@ -189,6 +193,10 @@ impl Sudoku {
         guesses
     }
 
+    /// Solves the sudoku by iteratively walking through all editable field with the
+    /// [Backtracing](https://en.wikipedia.org/wiki/Sudoku_solving_algorithms#Backtracking)
+    /// algorithm.
+    /// This method is guaranteed to find a solution.
     pub fn solve(&mut self) {
         let mut index = 0;
         let mut tries = 0;
@@ -213,6 +221,8 @@ impl Sudoku {
         info!("Solved. Needed {} tries.", tries);
     }
 
+    /// Resets the sudoku to its original values by setting all mutable fields to
+    /// zero.
     #[allow(dead_code)]
     pub fn reset(&mut self) {
         for (r, c) in self.mutable_fields.iter() {
@@ -220,6 +230,8 @@ impl Sudoku {
         }
     }
 
+    /// Returns a grid in its unsolved representation. Every editable field
+    /// is set to 0.
     pub fn get_unsolved(&self) -> Vec<Vec<u8>> {
         let mut grid_copy = self.grid.clone();
         for (r, c) in self.mutable_fields.iter() {
@@ -228,6 +240,7 @@ impl Sudoku {
         grid_copy
     }
 
+    /// Formats a given sudoku into a string.
     pub fn fmt(grid: &Vec<Vec<u8>>) -> String {
         let mut out = String::new();
         for (i, row) in (grid).iter().enumerate() {
@@ -253,7 +266,10 @@ impl Sudoku {
         out
     }
 
-    #[allow(dead_code)]
+    /// Prints the sudoku to stdout.
+    /// This function uses `Sudoku::fmt` for the formatting of the sudoku.
+    /// If `show_unresolved` is set to `true` the unsolved sudoku is shown next
+    /// to the solved one.
     pub fn print(&self, show_unsolved: bool) {
         if !show_unsolved {
             println!("{}", Sudoku::fmt(&self.grid));

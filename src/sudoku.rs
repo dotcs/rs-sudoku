@@ -1,4 +1,8 @@
 use itertools::Itertools;
+use log::info;
+use rand::distributions::{Distribution, Uniform};
+use rand::seq::SliceRandom;
+use rand::Rng;
 use std::collections::HashSet;
 use std::fmt;
 use std::iter;
@@ -148,9 +152,6 @@ impl Sudoku {
     }
 
     fn is_done(&self) -> bool {
-        // The alogorithm is done if all mutable fields are non-zero and all
-        // parcels are valid.
-
         // All mutable fields must be non-zero
         for (r, c) in &self.mutable_fields {
             if self.grid[*r as usize][*c as usize] == 0 {
@@ -158,8 +159,7 @@ impl Sudoku {
             }
         }
 
-        // And all parcels must be valid
-        self.is_valid()
+        self.calc_energy() == 0.0
     }
 
     fn get_mutable_fields(&self) -> Vec<(u8, u8)> {
@@ -238,11 +238,129 @@ impl Sudoku {
         Ok(format!("Solved. Needed {} tries.", tries))
     }
 
+    fn random_parcel_index() -> u8 {
+        let mut rng = rand::thread_rng();
+        rng.gen_range(0, 9)
+    }
+
+    fn get_parcel_fields(parcel_index: u8) -> Vec<(u8, u8)> {
+        let col_start = (parcel_index % 3) * 3;
+        let row_start = (parcel_index / 3) * 3;
+        let mut fields: Vec<(u8, u8)> = vec![];
+        for r in 0..3 {
+            for c in 0..3 {
+                fields.push((row_start + r, col_start + c));
+            }
+        }
+        fields
+    }
+
+    fn get_mutable_fields_of_parcel(&self, parcel_index: u8) -> Vec<(u8, u8)> {
+        let parcel_fields = Sudoku::get_parcel_fields(parcel_index);
+        parcel_fields
+            .into_iter()
+            .filter(|f| self.mutable_fields.contains(&f))
+            .collect()
+    }
+
+    fn calc_energy(&self) -> f32 {
+        let energy_max = f32::from(3 * i16::pow(3, 4));
+        let mut energy: f32 = energy_max;
+        for row in 0..9 {
+            energy -= f32::from(self.count_uniq_el_row(row));
+        }
+        for col in 0..9 {
+            energy -= f32::from(self.count_uniq_el_col(col));
+        }
+        for pi in 0..9 {
+            energy -= f32::from(self.count_uniq_el_parcel(pi));
+        }
+        energy
+    }
+
+    fn count_uniq_el_col(&self, col: u8) -> u8 {
+        let uniq: Vec<u8> = self.get_col(col).into_iter().unique().collect();
+        uniq.len() as u8
+    }
+
+    fn count_uniq_el_row(&self, row: u8) -> u8 {
+        let uniq: Vec<u8> = self.get_row(row).into_iter().unique().collect();
+        uniq.len() as u8
+    }
+
+    fn count_uniq_el_parcel(&self, pi: u8) -> u8 {
+        let uniq: Vec<u8> = self.get_parcel(pi).into_iter().flatten().unique().collect();
+        uniq.len() as u8
+    }
+
+    /// Solves sudoku by using a Montecarlo simulation.
+    /// See details here: https://www.lptmc.jussieu.fr/user/talbot/sudoku.html
     pub fn solve_montecarlo(&mut self, max_tries: u32) -> Result<String, String> {
         let n = 3;
-        let max_energy = 3 * i32::pow(n, 4);
+        let energy_max = f32::from(3 * i16::pow(n, 4));
+        let temperature = 0.15;
+        let mut tries = 0;
+        let mut rng = rand::thread_rng();
 
-        Err(String::from("This method is not implemented yet."))
+        // Fill empty values with random guesses
+        for pi in 0..9 {
+            let mutable_fields = self.get_mutable_fields_of_parcel(pi);
+            let unique_values: Vec<u8> = self
+                .get_parcel(pi)
+                .into_iter()
+                .flatten()
+                .unique()
+                .filter(|v| v > &0)
+                .collect();
+            let all_numbers = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+            let diff: Vec<u8> = all_numbers
+                .into_iter()
+                .filter(|v| !unique_values.contains(v))
+                .collect();
+            for (i, (r, c)) in mutable_fields.iter().enumerate() {
+                self.grid[*r as usize][*c as usize] = diff[i];
+            }
+        }
+
+        while !self.is_done() {
+            let rand_pi = Sudoku::random_parcel_index();
+            let mut mut_fields_parcel = self.get_mutable_fields_of_parcel(rand_pi);
+            mut_fields_parcel.shuffle(&mut rng);
+            let (f1_r, f1_c) = mut_fields_parcel[0];
+            let (f2_r, f2_c) = mut_fields_parcel[1];
+
+            // Swap values
+            info!("Swap fields {:?} and {:?}", (f1_r, f2_r), (f2_r, f2_c));
+            let f1_val = self.grid[f1_r as usize][f1_c as usize].clone();
+            let f2_val = self.grid[f2_r as usize][f2_c as usize].clone();
+            self.grid[f1_r as usize][f1_c as usize] = f2_val;
+            self.grid[f2_r as usize][f2_c as usize] = f1_val;
+
+            let energy = self.calc_energy();
+            info!("Calculated energy: {:?}", energy);
+            let dist = Uniform::from(0.0..1.0);
+            let threshold = dist.sample(&mut rng);
+            info!("Set threshold: {:?}", threshold);
+            let result = ((energy_max - energy) / temperature).exp();
+            info!("Calc result: {:?}", result);
+            let reject = result < threshold;
+            info!("Will reject value? {}", reject);
+
+            if reject {
+                self.grid[f1_r as usize][f1_c as usize] = f1_val;
+                self.grid[f2_r as usize][f2_c as usize] = f2_val;
+            }
+
+            tries += 1;
+            if tries == max_tries {
+                return Err(format!(
+                    "Could not solve sudoko. Exeeded limit of {} tries.",
+                    max_tries
+                ));
+            }
+        }
+
+        Ok(format!("Solved. Needed {} tries.", tries))
     }
 
     /// Resets the sudoku to its original values by setting all mutable fields to
@@ -466,5 +584,49 @@ mod tests {
 
         s.reset();
         assert_eq!(s.grid[0][0], 0);
+    }
+
+    #[test]
+    fn it_should_list_all_parcel_fields() {
+        assert_eq!(
+            Sudoku::get_parcel_fields(0),
+            vec![
+                (0, 0),
+                (0, 1),
+                (0, 2),
+                (1, 0),
+                (1, 1),
+                (1, 2),
+                (2, 0),
+                (2, 1),
+                (2, 2)
+            ]
+        );
+        assert_eq!(
+            Sudoku::get_parcel_fields(7),
+            vec![
+                (6, 3),
+                (6, 4),
+                (6, 5),
+                (7, 3),
+                (7, 4),
+                (7, 5),
+                (8, 3),
+                (8, 4),
+                (8, 5)
+            ]
+        );
+    }
+
+    #[test]
+    fn it_should_list_all_mutable_parcel_fields() {
+        let mut s = Sudoku::new();
+        s.read("examples/sudoku1.txt");
+        let mutable_fields = s.get_mutable_fields_of_parcel(5);
+
+        assert_eq!(
+            mutable_fields,
+            vec![(3, 6), (3, 8), (4, 7), (4, 8), (5, 6),]
+        );
     }
 }

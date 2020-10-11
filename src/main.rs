@@ -67,9 +67,9 @@ fn main() {
     let mut s = sudoku::Sudoku::new();
 
     let solver_method = match matches.value_of("algorithm") {
-        Some("backtracing") => sudoku::Method::Backtracing,
-        Some("montecarlo") => sudoku::Method::Montecarlo,
-        _ => sudoku::Method::Backtracing,
+        Some("backtracing") => sudoku::SolverMethod::Backtracing,
+        Some("montecarlo") => sudoku::SolverMethod::Montecarlo,
+        _ => sudoku::SolverMethod::Backtracing,
     };
 
     s.read(input_file);

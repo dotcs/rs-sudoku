@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use log::info;
 use rand::distributions::{Distribution, Uniform};
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -7,7 +6,7 @@ use std::collections::HashSet;
 use std::fmt;
 use std::iter;
 
-pub enum Method {
+pub enum SolverMethod {
     Backtracing,
     Montecarlo,
 }
@@ -148,6 +147,7 @@ impl Sudoku {
             && self.is_valid_parcel(parcel_index)
     }
 
+    #[allow(dead_code)]
     fn is_valid(&self) -> bool {
         for parcel_index in 0..9 {
             if !self.is_valid_parcel(parcel_index) {
@@ -157,7 +157,7 @@ impl Sudoku {
         true
     }
 
-    fn is_done(&self) -> bool {
+    fn is_done(&self, energy: Option<f32>) -> bool {
         // All mutable fields must be non-zero
         for (r, c) in &self.mutable_fields {
             if self.grid[*r as usize][*c as usize] == 0 {
@@ -165,7 +165,13 @@ impl Sudoku {
             }
         }
 
-        self.calc_energy() == 0.0
+        // In case the energy is already known, prevent re-computation of the
+        // energy, use the given value instead. Otherwise compute it.
+        let energy = match energy {
+            Some(val) => val,
+            None => self.calc_energy(),
+        };
+        energy == 0.0
     }
 
     fn get_mutable_fields(&self) -> Vec<(u8, u8)> {
@@ -203,10 +209,10 @@ impl Sudoku {
         guesses
     }
 
-    pub fn solve(&mut self, method: Method, max_tries: u32) -> Result<String, String> {
+    pub fn solve(&mut self, method: SolverMethod, max_tries: u32) -> Result<String, String> {
         match method {
-            Method::Backtracing => self.solve_backtrace(max_tries),
-            Method::Montecarlo => self.solve_montecarlo(max_tries),
+            SolverMethod::Backtracing => self.solve_backtrace(max_tries),
+            SolverMethod::Montecarlo => self.solve_montecarlo(max_tries),
         }
     }
 
@@ -218,7 +224,7 @@ impl Sudoku {
         let mut index = 0;
         let mut tries = 0;
 
-        while !self.is_done() {
+        while !self.is_done(None) {
             let (r, c) = self.mutable_fields[index];
             let val = self.grid[r as usize][c as usize];
             let guesses = self.get_field_guesses(r, c);
@@ -312,6 +318,7 @@ impl Sudoku {
         let temperature = 0.15;
         let mut tries = 0;
         let mut rng = rand::thread_rng();
+        let uniform_dist = Uniform::from(0.0..1.0);
 
         // Fill empty values with random guesses
         for pi in 0..9 {
@@ -335,7 +342,7 @@ impl Sudoku {
 
         let mut energy_last = self.calc_energy();
 
-        while !self.is_done() {
+        while !self.is_done(Some(energy_last)) {
             let rand_pi = Sudoku::random_parcel_index();
             let mut mut_fields_parcel = self.get_mutable_fields_of_parcel(rand_pi);
             mut_fields_parcel.shuffle(&mut rng);
@@ -349,8 +356,7 @@ impl Sudoku {
             self.grid[f2_r as usize][f2_c as usize] = f1_val;
 
             let energy = self.calc_energy();
-            let dist = Uniform::from(0.0..1.0);
-            let threshold = dist.sample(&mut rng);
+            let threshold = uniform_dist.sample(&mut rng);
             let result = ((energy_last - energy) / temperature).exp();
             let reject = result < threshold;
 
@@ -507,14 +513,14 @@ mod tests {
     fn it_should_flag_solution_as_done() {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1-solution.txt");
-        assert!(s.is_done());
+        assert!(s.is_done(None));
     }
 
     #[test]
     fn it_should_flag_unsolved_sudoko_as_not_done() {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1.txt");
-        assert!(!s.is_done());
+        assert!(!s.is_done(None));
     }
 
     #[test]

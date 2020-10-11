@@ -12,6 +12,12 @@ pub enum Method {
     Montecarlo,
 }
 
+pub enum EnergyDimension {
+    Row,
+    Column,
+    Parcel,
+}
+
 #[derive(Debug)]
 pub struct Sudoku {
     pub grid: Vec<Vec<u8>>,
@@ -243,6 +249,7 @@ impl Sudoku {
         rng.gen_range(0, 9)
     }
 
+    /// Returns all field indices (row, column) in a parcel.
     fn get_parcel_fields(parcel_index: u8) -> Vec<(u8, u8)> {
         let col_start = (parcel_index % 3) * 3;
         let row_start = (parcel_index / 3) * 3;
@@ -255,6 +262,7 @@ impl Sudoku {
         fields
     }
 
+    /// Returns all field indicies (row, column) of a mutable fields in a parcel.
     fn get_mutable_fields_of_parcel(&self, parcel_index: u8) -> Vec<(u8, u8)> {
         let parcel_fields = Sudoku::get_parcel_fields(parcel_index);
         parcel_fields
@@ -263,34 +271,38 @@ impl Sudoku {
             .collect()
     }
 
+    /// Calculates the current energy of the system.
+    /// The energy is defined as 3*n**4 minus the sum of the number of unique
+    /// elements in each row, column and parcel.
     fn calc_energy(&self) -> f32 {
         let n = 3;
         let energy_max = f32::from(3 * i16::pow(n, 4));
         let mut energy: f32 = energy_max;
-        for row in 0..9 {
-            energy -= f32::from(self.count_uniq_el_row(row));
-        }
-        for col in 0..9 {
-            energy -= f32::from(self.count_uniq_el_col(col));
-        }
-        for pi in 0..9 {
-            energy -= f32::from(self.count_uniq_el_parcel(pi));
+        for dim in [
+            EnergyDimension::Column,
+            EnergyDimension::Row,
+            EnergyDimension::Parcel,
+        ]
+        .iter()
+        {
+            for index in 0..9 {
+                energy -= f32::from(self.count_unique_elements(dim, index));
+            }
         }
         energy
     }
 
-    fn count_uniq_el_col(&self, col: u8) -> u8 {
-        let uniq: Vec<u8> = self.get_col(col).into_iter().unique().collect();
-        uniq.len() as u8
-    }
-
-    fn count_uniq_el_row(&self, row: u8) -> u8 {
-        let uniq: Vec<u8> = self.get_row(row).into_iter().unique().collect();
-        uniq.len() as u8
-    }
-
-    fn count_uniq_el_parcel(&self, pi: u8) -> u8 {
-        let uniq: Vec<u8> = self.get_parcel(pi).into_iter().flatten().unique().collect();
+    fn count_unique_elements(&self, dim: &EnergyDimension, index: u8) -> u8 {
+        let uniq: Vec<u8> = match dim {
+            EnergyDimension::Column => self.get_col(index).into_iter().unique().collect(),
+            EnergyDimension::Row => self.get_row(index).into_iter().unique().collect(),
+            EnergyDimension::Parcel => self
+                .get_parcel(index)
+                .into_iter()
+                .flatten()
+                .unique()
+                .collect(),
+        };
         uniq.len() as u8
     }
 

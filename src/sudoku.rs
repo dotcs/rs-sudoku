@@ -264,7 +264,8 @@ impl Sudoku {
     }
 
     fn calc_energy(&self) -> f32 {
-        let energy_max = f32::from(3 * i16::pow(3, 4));
+        let n = 3;
+        let energy_max = f32::from(3 * i16::pow(n, 4));
         let mut energy: f32 = energy_max;
         for row in 0..9 {
             energy -= f32::from(self.count_uniq_el_row(row));
@@ -296,8 +297,6 @@ impl Sudoku {
     /// Solves sudoku by using a Montecarlo simulation.
     /// See details here: https://www.lptmc.jussieu.fr/user/talbot/sudoku.html
     pub fn solve_montecarlo(&mut self, max_tries: u32) -> Result<String, String> {
-        let n = 3;
-        let energy_max = f32::from(3 * i16::pow(n, 4));
         let temperature = 0.15;
         let mut tries = 0;
         let mut rng = rand::thread_rng();
@@ -322,6 +321,8 @@ impl Sudoku {
             }
         }
 
+        let mut energy_last = self.calc_energy();
+
         while !self.is_done() {
             let rand_pi = Sudoku::random_parcel_index();
             let mut mut_fields_parcel = self.get_mutable_fields_of_parcel(rand_pi);
@@ -330,25 +331,22 @@ impl Sudoku {
             let (f2_r, f2_c) = mut_fields_parcel[1];
 
             // Swap values
-            info!("Swap fields {:?} and {:?}", (f1_r, f2_r), (f2_r, f2_c));
-            let f1_val = self.grid[f1_r as usize][f1_c as usize].clone();
-            let f2_val = self.grid[f2_r as usize][f2_c as usize].clone();
+            let f1_val = self.grid[f1_r as usize][f1_c as usize];
+            let f2_val = self.grid[f2_r as usize][f2_c as usize];
             self.grid[f1_r as usize][f1_c as usize] = f2_val;
             self.grid[f2_r as usize][f2_c as usize] = f1_val;
 
             let energy = self.calc_energy();
-            info!("Calculated energy: {:?}", energy);
             let dist = Uniform::from(0.0..1.0);
             let threshold = dist.sample(&mut rng);
-            info!("Set threshold: {:?}", threshold);
-            let result = ((energy_max - energy) / temperature).exp();
-            info!("Calc result: {:?}", result);
+            let result = ((energy_last - energy) / temperature).exp();
             let reject = result < threshold;
-            info!("Will reject value? {}", reject);
 
             if reject {
                 self.grid[f1_r as usize][f1_c as usize] = f1_val;
                 self.grid[f2_r as usize][f2_c as usize] = f2_val;
+            } else {
+                energy_last = energy;
             }
 
             tries += 1;

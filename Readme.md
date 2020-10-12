@@ -11,7 +11,7 @@ Use the version that matches your operating system.
 Use the `--help` flag to get familiar with all options.
 ```console
 $ rs-sudoku --help
-Rust Sudoku Solver <VERSION>
+Rust Sudoku Solver 0.3.0
 dotcs <git@dotcs.me>
 Simple sudoku solver written in Rust
 
@@ -25,6 +25,8 @@ FLAGS:
     -v, --verbose          Sets the level of verbosity, can be used multiple times to increase verbosity
 
 OPTIONS:
+        --algorithm <algorithm>    Selects which algorithm will be used to solve the sudoku. [default: backtracing]
+                                   [possible values: backtracing, montecarlo]
         --max-tries <max-tries>    Defines the maximum number of tries to iteratively solve the sudoku. [default:
                                    100000]
 
@@ -73,6 +75,8 @@ x4x|x5x|x36 -> 248|957|136
 7x3|x18|xxx -> 763|418|259
 ```
 
+Currently two algorithms are implemented.
+Use the `--algorithm` parameter to choose between [`backtracing`](./src/sudoku/solver/backtracing.rs) (brute-force) and [`montecarlo`](./src/sudoku/solver/montecarlo.rs) methods.
 
 ## Development
 

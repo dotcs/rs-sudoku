@@ -5,6 +5,8 @@ use std::process;
 mod logger;
 mod sudoku;
 
+use sudoku::solver::{Backtracing, Montecarlo, Solver};
+
 fn main() {
     let matches = App::new("Rust Sudoku Solver")
         .version("0.2.0")
@@ -66,24 +68,31 @@ fn main() {
 
     let mut s = sudoku::Sudoku::new();
 
-    let solver_method = match matches.value_of("algorithm") {
-        Some("backtracing") => sudoku::SolverMethod::Backtracing,
-        Some("montecarlo") => sudoku::SolverMethod::Montecarlo,
-        _ => sudoku::SolverMethod::Backtracing,
+    s.read(input_file);
+
+    let mut solver = match matches.value_of("algorithm") {
+        Some("backtracing") => Box::new(Backtracing::new(max_tries)) as Box<dyn Solver>,
+        Some("montecarlo") => Box::new(Montecarlo::new(max_tries, 0.15)) as Box<dyn Solver>,
+        _ => Box::new(Backtracing::new(max_tries)) as Box<dyn Solver>,
     };
 
-    s.read(input_file);
-    match s.solve(solver_method, max_tries) {
-        Ok(msg) => {
-            info!("{}", msg);
+    s = solver.solve(s);
+
+    match solver.is_success() {
+        true => {
+            info!(
+                "Success. Solving the sudoku needed {} tries.",
+                solver.get_tries()
+            );
             s.print(show_unresolved);
             process::exit(0);
         }
-        Err(msg) => {
+        false => {
             error!(
-                "{} Make sure that the sudoku is valid and consider increasing this \
+                "Fatal. Exceeded the limit of {} tries. \
+                Make sure that the sudoku is valid and consider increasing this \
                 number with the --max-tries argument.",
-                msg
+                max_tries
             );
             process::exit(1);
         }

@@ -30,6 +30,19 @@ impl Grid {
         grid
     }
 
+    /// Returns all field indices (row, column) in a parcel.
+    pub fn get_parcel_fields(parcel_index: u8) -> Vec<Field> {
+        let col_start = (parcel_index % 3) * 3;
+        let row_start = (parcel_index / 3) * 3;
+        let mut fields: Vec<Field> = vec![];
+        for r in 0..3 {
+            for c in 0..3 {
+                fields.push(Field::new(row_start + r, col_start + c));
+            }
+        }
+        fields
+    }
+
     fn get_mutable_fields(&self) -> Vec<Field> {
         let mut mutable_fields: Vec<Field> = vec![];
         for r in 0..9 {
@@ -120,6 +133,15 @@ impl Grid {
             self.set(field, 0);
         }
     }
+
+    /// Returns all field indicies (row, column) of a mutable fields in a parcel.
+    pub fn get_mutable_fields_of_parcel(&self, parcel_index: u8) -> Vec<Field> {
+        let parcel_fields = Grid::get_parcel_fields(parcel_index);
+        parcel_fields
+            .into_iter()
+            .filter(|f| self.mutable_fields.contains(&f))
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -131,5 +153,37 @@ mod tests {
         let grid = Grid::new(vec![vec![0; 9]; 9]);
         assert_eq!(grid.get(&Field::new(0, 0)), 0);
         assert_eq!(grid.get(&Field::new(8, 8)), 0);
+    }
+
+    #[test]
+    fn it_should_list_all_parcel_fields() {
+        assert_eq!(
+            Grid::get_parcel_fields(0),
+            vec![
+                Field::new(0, 0),
+                Field::new(0, 1),
+                Field::new(0, 2),
+                Field::new(1, 0),
+                Field::new(1, 1),
+                Field::new(1, 2),
+                Field::new(2, 0),
+                Field::new(2, 1),
+                Field::new(2, 2)
+            ]
+        );
+        assert_eq!(
+            Grid::get_parcel_fields(7),
+            vec![
+                Field::new(6, 3),
+                Field::new(6, 4),
+                Field::new(6, 5),
+                Field::new(7, 3),
+                Field::new(7, 4),
+                Field::new(7, 5),
+                Field::new(8, 3),
+                Field::new(8, 4),
+                Field::new(8, 5)
+            ]
+        );
     }
 }

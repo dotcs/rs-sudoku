@@ -10,7 +10,7 @@ use config::Config;
 use sudoku::solver::{Backtracing, Montecarlo, Solver};
 
 fn main() {
-    let parser = cli::configure_parser().version("0.2.0");
+    let parser = cli::configure_parser().version("0.3.0");
     let matches = parser.get_matches();
 
     // Configure logger as early as possible.

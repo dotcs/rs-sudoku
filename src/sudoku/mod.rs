@@ -235,14 +235,14 @@ mod tests {
     fn it_should_flag_solution_as_done() {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1-solution.txt");
-        assert!(s.is_done(None));
+        assert!(s.is_done());
     }
 
     #[test]
     fn it_should_flag_unsolved_sudoko_as_not_done() {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1.txt");
-        assert!(!s.is_done(None));
+        assert!(!s.is_done());
     }
 
     #[test]

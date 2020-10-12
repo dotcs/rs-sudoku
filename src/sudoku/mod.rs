@@ -6,40 +6,10 @@ use std::collections::HashSet;
 use std::fmt;
 use std::iter;
 
-pub enum SolverMethod {
-    Backtracing,
-    Montecarlo,
-}
-
-pub enum EnergyDimension {
-    Row,
-    Column,
-    Parcel,
-}
-
-#[derive(Debug)]
-pub struct Field {
-    row: u8,
-    column: u8,
-}
-
-impl fmt::Display for Field {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({},{})", self.row, self.column)
-    }
-}
-
-impl Field {
-    fn new(row: u8, column: u8) -> Field {
-        Field { row, column }
-    }
-}
-
-impl std::cmp::PartialEq for Field {
-    fn eq(&self, other: &Field) -> bool {
-        self.row == other.row && self.column == other.column
-    }
-}
+mod field;
+pub use field::Field;
+mod solver;
+pub use solver::{EnergyDimension, SolverMethod};
 
 #[derive(Debug)]
 pub struct Sudoku {

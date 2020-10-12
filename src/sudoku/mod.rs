@@ -16,7 +16,6 @@ pub use grid::Grid;
 #[derive(Debug)]
 pub struct Sudoku {
     pub grid: Grid,
-    mutable_fields: Vec<Field>,
 }
 
 impl fmt::Display for Sudoku {
@@ -38,11 +37,7 @@ impl Sudoku {
     /// file.
     pub fn new() -> Sudoku {
         let grid = Grid::new(vec![vec![0; 9]; 9]);
-        let mutable_fields = vec![];
-        Sudoku {
-            grid,
-            mutable_fields,
-        }
+        Sudoku { grid }
     }
 
     /// Reads a sudoku from a file.
@@ -61,7 +56,6 @@ impl Sudoku {
             })
             .collect();
         self.grid = Grid::new(res);
-        self.mutable_fields = self.grid.get_mutable_fields();
     }
 
     #[allow(dead_code)]
@@ -102,7 +96,7 @@ impl Sudoku {
 
     fn is_done(&self, energy: Option<f32>) -> bool {
         // All mutable fields must be non-zero
-        for field in &self.mutable_fields {
+        for field in &self.grid.mutable_fields {
             if self.grid.get(&field) == 0 {
                 return false;
             }
@@ -157,17 +151,17 @@ impl Sudoku {
         let mut tries = 0;
 
         while !self.is_done(None) {
-            let field = &self.mutable_fields[index];
-            let val = self.grid.get(field);
+            let field = self.grid.mutable_fields[index].clone();
+            let val = self.grid.get(&field);
             let guesses = self.get_field_guesses(&field);
             let next_guesses: Vec<u8> = guesses.into_iter().filter(|v| v > &val).collect();
             if next_guesses.len() == 0 {
                 // No more guesses available
                 // Go back one step and use next guess there
-                self.grid.set(field, 0);
+                self.grid.set(&field, 0);
                 index -= 1;
             } else {
-                self.grid.set(field, next_guesses[0]);
+                self.grid.set(&field, next_guesses[0]);
                 index += 1;
             }
             tries += 1;
@@ -205,7 +199,7 @@ impl Sudoku {
         let parcel_fields = Sudoku::get_parcel_fields(parcel_index);
         parcel_fields
             .into_iter()
-            .filter(|f| self.mutable_fields.contains(&f))
+            .filter(|f| self.grid.mutable_fields.contains(&f))
             .collect()
     }
 
@@ -313,22 +307,11 @@ impl Sudoku {
         Ok(format!("Solved. Needed {} tries.", tries))
     }
 
-    /// Resets the sudoku to its original values by setting all mutable fields to
-    /// zero.
-    #[allow(dead_code)]
-    pub fn reset(&mut self) {
-        for field in self.mutable_fields.iter() {
-            self.grid.set(field, 0);
-        }
-    }
-
     /// Returns a grid in its unsolved representation. Every editable field
     /// is set to 0.
     pub fn get_unsolved(&self) -> Grid {
         let mut grid_copy = self.grid.clone();
-        for field in self.mutable_fields.iter() {
-            grid_copy.set(field, 0);
-        }
+        grid_copy.reset();
         grid_copy
     }
 
@@ -437,7 +420,7 @@ mod tests {
         s.read("examples/sudoku1.txt");
 
         assert_eq!(
-            s.mutable_fields,
+            s.grid.mutable_fields,
             vec![
                 Field::new(0, 0),
                 Field::new(0, 1),
@@ -501,12 +484,12 @@ mod tests {
         s.read("examples/sudoku1.txt");
 
         // Sanity check; (0,0) must be mutable field
-        assert_eq!(s.grid.get_mutable_fields()[0], Field::new(0, 0));
+        assert_eq!(s.grid.mutable_fields[0], Field::new(0, 0));
 
         s.grid.set(&Field::new(0, 0), 5); // change value so that there is something to reset
         assert_eq!(s.grid.get(&Field::new(0, 0)), 5);
 
-        s.reset();
+        s.grid.reset();
         assert_eq!(s.grid.get(&Field::new(0, 0)), 0);
     }
 

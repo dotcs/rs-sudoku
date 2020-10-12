@@ -24,6 +24,12 @@ impl std::cmp::PartialEq for Field {
     }
 }
 
+impl std::clone::Clone for Field {
+    fn clone(&self) -> Field {
+        Field::new(self.row, self.column)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

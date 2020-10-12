@@ -4,19 +4,42 @@ use std::iter;
 #[derive(Debug)]
 pub struct Grid {
     fields: Vec<Vec<u8>>,
+    pub mutable_fields: Vec<Field>,
 }
 
 impl std::clone::Clone for Grid {
     fn clone(&self) -> Grid {
         Grid {
             fields: self.fields.clone(),
+            mutable_fields: self.mutable_fields.clone(),
         }
     }
 }
 
 impl Grid {
     pub fn new(fields: Vec<Vec<u8>>) -> Grid {
-        Grid { fields }
+        let mut grid = Grid {
+            fields,
+            mutable_fields: vec![],
+        };
+
+        // Calculate mutable fields once and cache fields.
+        let mutable_fields = grid.get_mutable_fields();
+        grid.mutable_fields = mutable_fields;
+
+        grid
+    }
+
+    fn get_mutable_fields(&self) -> Vec<Field> {
+        let mut mutable_fields: Vec<Field> = vec![];
+        for r in 0..9 {
+            for c in 0..9 {
+                if self.fields[r as usize][c as usize] == 0 {
+                    mutable_fields.push(Field::new(r as u8, c as u8));
+                }
+            }
+        }
+        mutable_fields
     }
 
     pub fn get_parcel_index(field: &Field) -> u8 {
@@ -89,16 +112,13 @@ impl Grid {
         parcel
     }
 
-    pub fn get_mutable_fields(&self) -> Vec<Field> {
-        let mut mutable_fields: Vec<Field> = vec![];
-        for r in 0..9 {
-            for c in 0..9 {
-                if self.fields[r as usize][c as usize] == 0 {
-                    mutable_fields.push(Field::new(r as u8, c as u8));
-                }
-            }
+    /// Resets the sudoku to its original values by setting all mutable fields to
+    /// zero.
+    pub fn reset(&mut self) {
+        let mutable_fields = self.mutable_fields.clone();
+        for field in mutable_fields.iter() {
+            self.set(field, 0);
         }
-        mutable_fields
     }
 }
 

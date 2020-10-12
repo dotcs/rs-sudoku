@@ -1,3 +1,4 @@
+use log::debug;
 use log::{LevelFilter, Metadata, Record, SetLoggerError};
 
 struct SimpleLogger;
@@ -20,6 +21,16 @@ impl log::Log for SimpleLogger {
 
 static LOGGER: SimpleLogger = SimpleLogger;
 
-pub fn init(level: LevelFilter) -> Result<(), SetLoggerError> {
+fn _init(level: LevelFilter) -> Result<(), SetLoggerError> {
     log::set_logger(&LOGGER).map(|()| log::set_max_level(level))
+}
+
+pub fn init(level: u8) {
+    let log_level: LevelFilter = match level {
+        0 => LevelFilter::Warn,
+        1 => LevelFilter::Info,
+        2 | _ => LevelFilter::Trace,
+    };
+    let _ = _init(log_level);
+    debug!("Set logging level to: {}", log_level);
 }

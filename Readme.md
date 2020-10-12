@@ -3,6 +3,10 @@
 This project is a toy project that I have written to get familiar with the Rust language.
 It contains a simple algorithm to solve sudokus.
 
+[![rs-sudoku usage demo][usage-demo-svg]][usage-demo-asciinema]  
+_No demo visible here? View it on [asciinema][usage-demo-asciinema]._
+
+
 ## Getting started
 
 Download the [latest release](https://github.com/dotcs/rs-sudoku/releases/latest) from GitHub.
@@ -97,3 +101,6 @@ $ cargo run -- examples/sudoku1.txt
 248|957|136
 763|418|259
 ```
+
+[usage-demo-asciinema]: https://asciinema.org/a/364932
+[usage-demo-svg]: https://asciinema.org/a/364932.svg

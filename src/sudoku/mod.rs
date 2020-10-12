@@ -4,22 +4,24 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::HashSet;
 use std::fmt;
-use std::iter;
 
 mod field;
 pub use field::Field;
 mod solver;
 pub use solver::{EnergyDimension, SolverMethod};
+mod common;
+mod grid;
+pub use grid::Grid;
 
 #[derive(Debug)]
 pub struct Sudoku {
-    pub grid: Vec<Vec<u8>>,
+    pub grid: Grid,
     mutable_fields: Vec<Field>,
 }
 
 impl fmt::Display for Sudoku {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Sudoku::fmt(&self.grid))
+        write!(f, "{}", &self.grid.fmt())
     }
 }
 
@@ -35,7 +37,7 @@ impl Sudoku {
     /// Make sure to run the `read` method afterwards to read a sudoku from a
     /// file.
     pub fn new() -> Sudoku {
-        let grid = vec![vec![9]; 9];
+        let grid = Grid::new(vec![vec![0; 9]; 9]);
         let mutable_fields = vec![];
         Sudoku {
             grid,
@@ -58,84 +60,31 @@ impl Sudoku {
                     .collect()
             })
             .collect();
-        self.grid = res;
-        self.mutable_fields = self.get_mutable_fields();
-    }
-
-    fn get(&self, field: &Field) -> u8 {
-        *self
-            .grid
-            .get(field.row as usize)
-            .unwrap()
-            .get(field.column as usize)
-            .unwrap()
-    }
-
-    fn get_row(&self, row_index: u8) -> Vec<u8> {
-        self.grid.get(row_index as usize).unwrap().clone()
+        self.grid = Grid::new(res);
+        self.mutable_fields = self.grid.get_mutable_fields();
     }
 
     #[allow(dead_code)]
-    fn is_valid_row(&self, row_index: u8) -> bool {
-        let row = self.get_row(row_index);
-        Sudoku::has_only_unique_digits(row)
-    }
-
-    fn get_col(&self, col_index: u8) -> Vec<u8> {
-        self.grid
-            .clone()
-            .into_iter()
-            .map(|r| r[col_index as usize])
-            .collect()
+    pub fn is_valid_row(&self, row_index: u8) -> bool {
+        let row = self.grid.get_row(row_index);
+        common::has_only_unique_digits(&row)
     }
 
     #[allow(dead_code)]
-    fn is_valid_col(&self, col_index: u8) -> bool {
-        let column = self.get_col(col_index);
-        Sudoku::has_only_unique_digits(column)
-    }
-
-    fn get_parcel(&self, index: u8) -> Vec<Vec<u8>> {
-        let start_row = (index / 3) * 3;
-        let start_col = (index % 3) * 3;
-        let mut parcel = vec![vec![0; 3]; 3];
-        for ci in 0..3 {
-            for ri in 0..3 {
-                let row = start_row + ri;
-                let col = start_col + ci;
-                parcel[ri as usize][ci as usize] = self.get(&Field::new(row, col))
-            }
-        }
-        parcel
-    }
-
-    fn has_only_unique_digits(digits: Vec<u8>) -> bool {
-        // Get all non-zero values (unfilled values)
-        let nonzero_values: Vec<u8> = digits.into_iter().filter(|v| *v != 0).collect();
-
-        // If not all non-zero values in the parcel are unique, the parcel is not valid
-        let unique_values: Vec<u8> = nonzero_values.clone().into_iter().unique().collect();
-
-        // The parcel is valid if both, the nonzero and the unique values have the same
-        // dimension
-        nonzero_values.len() == unique_values.len()
+    pub fn is_valid_col(&self, col_index: u8) -> bool {
+        let column = self.grid.get_col(col_index);
+        common::has_only_unique_digits(&column)
     }
 
     #[allow(dead_code)]
-    fn is_valid_parcel(&self, parcel_index: u8) -> bool {
-        let parcel = self.get_parcel(parcel_index);
-        Sudoku::has_only_unique_digits(parcel.into_iter().flatten().collect::<Vec<u8>>())
-    }
-
-    fn get_parcel_index(field: &Field) -> u8 {
-        let x = field.row / 3;
-        let y = field.column / 3;
-        x * 3 + y
+    pub fn is_valid_parcel(&self, parcel_index: u8) -> bool {
+        let parcel = self.grid.get_parcel(parcel_index);
+        common::has_only_unique_digits(&parcel.into_iter().flatten().collect::<Vec<u8>>())
     }
 
     #[allow(dead_code)]
     fn is_valid_field(&self, field: &Field) -> bool {
-        let parcel_index = Sudoku::get_parcel_index(&field);
+        let parcel_index = Grid::get_parcel_index(&field);
         self.is_valid_row(field.row)
             && self.is_valid_col(field.column)
             && self.is_valid_parcel(parcel_index)
@@ -154,7 +103,7 @@ impl Sudoku {
     fn is_done(&self, energy: Option<f32>) -> bool {
         // All mutable fields must be non-zero
         for field in &self.mutable_fields {
-            if self.grid[field.row as usize][field.column as usize] == 0 {
+            if self.grid.get(&field) == 0 {
                 return false;
             }
         }
@@ -168,18 +117,6 @@ impl Sudoku {
         energy == 0.0
     }
 
-    fn get_mutable_fields(&self) -> Vec<Field> {
-        let mut mutable_fields: Vec<Field> = vec![];
-        for r in 0..9 {
-            for c in 0..9 {
-                if self.grid[r][c] == 0 {
-                    mutable_fields.push(Field::new(r as u8, c as u8));
-                }
-            }
-        }
-        mutable_fields
-    }
-
     fn get_field_guesses(&self, field: &Field) -> Vec<u8> {
         let mut set_allowed: HashSet<u8> = HashSet::new();
         for i in 1..10 {
@@ -187,10 +124,11 @@ impl Sudoku {
         }
 
         let mut seen: HashSet<u8> = HashSet::new();
-        let values_row: Vec<u8> = self.get_row(field.row);
-        let values_col: Vec<u8> = self.get_col(field.column);
+        let values_row: Vec<u8> = self.grid.get_row(field.row);
+        let values_col: Vec<u8> = self.grid.get_col(field.column);
         let values_parcel: Vec<u8> = self
-            .get_parcel(Sudoku::get_parcel_index(field))
+            .grid
+            .get_parcel(Grid::get_parcel_index(field))
             .into_iter()
             .flatten()
             .collect();
@@ -220,16 +158,16 @@ impl Sudoku {
 
         while !self.is_done(None) {
             let field = &self.mutable_fields[index];
-            let val = self.grid[field.row as usize][field.column as usize];
+            let val = self.grid.get(field);
             let guesses = self.get_field_guesses(&field);
             let next_guesses: Vec<u8> = guesses.into_iter().filter(|v| v > &val).collect();
             if next_guesses.len() == 0 {
                 // No more guesses available
                 // Go back one step and use next guess there
-                self.grid[field.row as usize][field.column as usize] = 0;
+                self.grid.set(field, 0);
                 index -= 1;
             } else {
-                self.grid[field.row as usize][field.column as usize] = next_guesses[0];
+                self.grid.set(field, next_guesses[0]);
                 index += 1;
             }
             tries += 1;
@@ -294,9 +232,10 @@ impl Sudoku {
 
     fn count_unique_elements(&self, dim: &EnergyDimension, index: u8) -> u8 {
         let uniq: Vec<u8> = match dim {
-            EnergyDimension::Column => self.get_col(index).into_iter().unique().collect(),
-            EnergyDimension::Row => self.get_row(index).into_iter().unique().collect(),
+            EnergyDimension::Column => self.grid.get_col(index).into_iter().unique().collect(),
+            EnergyDimension::Row => self.grid.get_row(index).into_iter().unique().collect(),
             EnergyDimension::Parcel => self
+                .grid
                 .get_parcel(index)
                 .into_iter()
                 .flatten()
@@ -318,6 +257,7 @@ impl Sudoku {
         for pi in 0..9 {
             let mutable_fields = self.get_mutable_fields_of_parcel(pi);
             let unique_values: Vec<u8> = self
+                .grid
                 .get_parcel(pi)
                 .into_iter()
                 .flatten()
@@ -330,7 +270,7 @@ impl Sudoku {
                 .filter(|v| !unique_values.contains(v))
                 .collect();
             for (i, field) in mutable_fields.iter().enumerate() {
-                self.grid[field.row as usize][field.column as usize] = diff[i];
+                self.grid.set(field, diff[i]);
             }
         }
 
@@ -344,10 +284,10 @@ impl Sudoku {
             let f2 = &mut_fields_parcel[1];
 
             // Swap values
-            let f1_val = self.grid[f1.row as usize][f1.column as usize];
-            let f2_val = self.grid[f2.row as usize][f2.column as usize];
-            self.grid[f1.row as usize][f1.column as usize] = f2_val;
-            self.grid[f2.row as usize][f2.column as usize] = f1_val;
+            let f1_val = self.grid.get(f1);
+            let f2_val = self.grid.get(f2);
+            self.grid.set(f1, f2_val);
+            self.grid.set(f2, f1_val);
 
             let energy = self.calc_energy();
             let threshold = uniform_dist.sample(&mut rng);
@@ -355,8 +295,8 @@ impl Sudoku {
             let reject = result < threshold;
 
             if reject {
-                self.grid[f1.row as usize][f1.column as usize] = f1_val;
-                self.grid[f2.row as usize][f2.column as usize] = f2_val;
+                self.grid.set(f1, f1_val);
+                self.grid.set(f2, f2_val);
             } else {
                 energy_last = energy;
             }
@@ -378,44 +318,18 @@ impl Sudoku {
     #[allow(dead_code)]
     pub fn reset(&mut self) {
         for field in self.mutable_fields.iter() {
-            self.grid[field.row as usize][field.column as usize] = 0;
+            self.grid.set(field, 0);
         }
     }
 
     /// Returns a grid in its unsolved representation. Every editable field
     /// is set to 0.
-    pub fn get_unsolved(&self) -> Vec<Vec<u8>> {
+    pub fn get_unsolved(&self) -> Grid {
         let mut grid_copy = self.grid.clone();
         for field in self.mutable_fields.iter() {
-            grid_copy[field.row as usize][field.column as usize] = 0;
+            grid_copy.set(field, 0);
         }
         grid_copy
-    }
-
-    /// Formats a given sudoku into a string.
-    pub fn fmt(grid: &Vec<Vec<u8>>) -> String {
-        let mut out = String::new();
-        for (i, row) in (grid).iter().enumerate() {
-            if i > 0 && i % 3 == 0 {
-                out += &iter::repeat("-").take(11).collect::<String>()[..];
-                out += "\n";
-            }
-            for (j, v) in row.iter().enumerate() {
-                if j > 0 && j % 3 == 0 {
-                    out += "|";
-                }
-                if v == &0 {
-                    out += "x";
-                } else {
-                    let val = format!("{}", v);
-                    out += &val[..];
-                }
-            }
-            if i < grid.len() - 1 {
-                out += "\n";
-            }
-        }
-        out
     }
 
     /// Prints the sudoku to stdout.
@@ -424,10 +338,10 @@ impl Sudoku {
     /// to the solved one.
     pub fn print(&self, show_unsolved: bool) {
         if !show_unsolved {
-            println!("{}", Sudoku::fmt(&self.grid));
+            println!("{}", Grid::fmt(&self.grid));
         } else {
-            let unresolved = Sudoku::fmt(&self.get_unsolved());
-            let solved = Sudoku::fmt(&self.grid);
+            let unresolved = Grid::fmt(&self.get_unsolved());
+            let solved = Grid::fmt(&self.grid);
             let solved_iter: Vec<&str> = solved.split("\n").collect();
             for (i, line) in unresolved.split("\n").enumerate() {
                 println!("{} -> {}", line, solved_iter.get(i).unwrap());
@@ -450,8 +364,8 @@ mod tests {
     fn it_should_get_row_col_values() {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1-solution.txt");
-        assert_eq!(s.get(&Field::new(0, 6)), 7);
-        assert_eq!(s.get(&Field::new(1, 6)), 4);
+        assert_eq!(s.grid.get(&Field::new(0, 6)), 7);
+        assert_eq!(s.grid.get(&Field::new(1, 6)), 4);
     }
 
     #[test]
@@ -459,11 +373,11 @@ mod tests {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1-solution.txt");
         assert_eq!(
-            s.get_parcel(0),
+            s.grid.get_parcel(0),
             vec![vec![4, 3, 5], vec![6, 8, 2], vec![1, 9, 7]]
         );
         assert_eq!(
-            s.get_parcel(3),
+            s.grid.get_parcel(3),
             vec![vec![8, 2, 6], vec![3, 7, 4], vec![9, 5, 1]]
         );
     }
@@ -474,8 +388,8 @@ mod tests {
         s.read("examples/sudoku1-solution.txt");
         assert!(s.is_valid_parcel(0));
 
-        s.grid[0][0] = 1;
-        s.grid[0][1] = 1;
+        s.grid.set(&Field::new(0, 0), 1);
+        s.grid.set(&Field::new(0, 1), 1);
         assert!(!s.is_valid_parcel(0));
     }
 
@@ -483,14 +397,14 @@ mod tests {
     fn it_should_give_rows() {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1-solution.txt");
-        assert_eq!(s.get_row(2), vec![1, 9, 7, 8, 3, 4, 5, 6, 2]);
+        assert_eq!(s.grid.get_row(2), vec![1, 9, 7, 8, 3, 4, 5, 6, 2]);
     }
 
     #[test]
     fn it_should_give_columns() {
         let mut s = Sudoku::new();
         s.read("examples/sudoku1-solution.txt");
-        assert_eq!(s.get_col(2), vec![5, 2, 7, 6, 4, 1, 9, 8, 3]);
+        assert_eq!(s.grid.get_col(2), vec![5, 2, 7, 6, 4, 1, 9, 8, 3]);
     }
 
     #[test]
@@ -499,7 +413,7 @@ mod tests {
         s.read("examples/sudoku1-solution.txt");
         assert!(s.is_valid());
 
-        s.grid[0][0] = 6;
+        s.grid.set(&Field::new(0, 0), 6);
         assert!(!s.is_valid());
     }
 
@@ -587,13 +501,13 @@ mod tests {
         s.read("examples/sudoku1.txt");
 
         // Sanity check; (0,0) must be mutable field
-        assert_eq!(s.get_mutable_fields()[0], Field::new(0, 0));
+        assert_eq!(s.grid.get_mutable_fields()[0], Field::new(0, 0));
 
-        s.grid[0][0] = 5; // change value so that there is something to reset
-        assert_eq!(s.grid[0][0], 5);
+        s.grid.set(&Field::new(0, 0), 5); // change value so that there is something to reset
+        assert_eq!(s.grid.get(&Field::new(0, 0)), 5);
 
         s.reset();
-        assert_eq!(s.grid[0][0], 0);
+        assert_eq!(s.grid.get(&Field::new(0, 0)), 0);
     }
 
     #[test]

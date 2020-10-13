@@ -1,9 +1,10 @@
 use clap::{App, Arg};
 
 pub fn configure_parser() -> App<'static, 'static> {
-    App::new("Rust Sudoku Solver")
-        .about("Simple sudoku solver written in Rust")
-        .author("dotcs <git@dotcs.me>")
+    App::new(crate_name!())
+        .about(crate_description!())
+        .version(crate_version!())
+        .author(crate_authors!())
         .arg(
             Arg::with_name("INPUT")
                 .short("i")

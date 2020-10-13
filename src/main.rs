@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate clap;
+
 use log::{error, info};
 use std::process;
 
@@ -9,12 +12,8 @@ mod sudoku;
 use config::Config;
 use sudoku::solver::{Backtracing, Montecarlo, Solver};
 
-/// Application version.
-/// Must match the version in the Cargo.toml config file.
-const VERSION: &str = "0.3.0";
-
 fn main() {
-    let parser = cli::configure_parser().version(VERSION);
+    let parser = cli::configure_parser();
     let matches = parser.get_matches();
 
     // Configure logger as early as possible.

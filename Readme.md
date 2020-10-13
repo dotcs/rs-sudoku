@@ -9,7 +9,7 @@ _No demo visible here? View it on [asciinema][usage-demo-asciinema]._
 
 ## Getting started
 
-Download the [latest release](https://github.com/dotcs/rs-sudoku/releases/latest) from GitHub.
+Download the [latest release][latest-release] from GitHub.
 Use the version that matches your operating system.
 
 Use the `--help` flag to get familiar with all options.
@@ -38,9 +38,9 @@ ARGS:
     <INPUT>    Sets the file to read the sudoku from
 ```
 
-In the [`examples`](./examples) folder of this respository a few Sudokus are located that can be use to quickly try out this Rust implementation.
+In the [`examples`][examples-folder] folder of this respository a few Sudokus are located that can be use to quickly try out this Rust implementation.
 Other Sudokus can be used as well.
-The files should match the [same format](./examples/sudoku1.txt) as shown in the examples.
+The files should match the [same format][example-sudoku] as shown in the examples.
 
 To solve a sudoku run 
 
@@ -80,11 +80,11 @@ x4x|x5x|x36 -> 248|957|136
 ```
 
 Currently two algorithms are implemented.
-Use the `--algorithm` parameter to choose between [`backtracing`](./src/sudoku/solver/backtracing.rs) (brute-force) and [`montecarlo`](./src/sudoku/solver/montecarlo.rs) methods.
+Use the `--algorithm` parameter to choose between [`backtracing`][algo-backtracing] (brute-force) and [`montecarlo`][algo-montecarlo] methods.
 
 ## Development
 
-Install [Rustup](https://rustup.rs/) first.
+Install [Rustup][rustup] first.
 Then clone this repository and run
 
 ```console
@@ -102,5 +102,11 @@ $ cargo run -- examples/sudoku1.txt
 763|418|259
 ```
 
+[algo-backtracing]: ./src/sudoku/solver/backtracing.rs
+[algo-montecarlo]: ./src/sudoku/solver/montecarlo.rs
+[example-sudoku]:./examples/sudoku1.txt
+[examples-folder]: ./examples
+[latest-release]: https://github.com/dotcs/rs-sudoku/releases/latest
+[rustup]: https://rustup.rs/
 [usage-demo-asciinema]: https://asciinema.org/a/364932
 [usage-demo-svg]: https://asciinema.org/a/364932.svg
